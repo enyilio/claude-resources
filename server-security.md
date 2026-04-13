@@ -91,3 +91,61 @@ source ~/.bashrc
 ### 注意事項
 - `alias rm='trash'` 只保護一般使用者，`sudo rm` 不受保護
 - 需要 sudo 刪除時，一律改用 `sudo trash 檔案路徑`
+
+---
+
+## 三、版本控制（Git）
+
+### 目的
+
+每次修改主機上的客製化程式碼後，透過 git 保存變更紀錄，確保任何修改都可追蹤與還原。
+
+### zenith 網站 Monorepo
+
+所有 zenith 網站的客製化程式碼集中在單一私人 repo 管理：
+**Repo：** `enyilio/zenith`（private）
+
+**追蹤範圍（`/home/mooga/webapps/zenith/wp-content/`）：**
+
+```
+wp-content/
+├── themes/
+│   └── generatepress_child/        ← 子主題（functions.php、style.css、WooCommerce 模板）
+└── plugins/
+    ├── zenith-custom-checkout/     ← Moospace Open Price Checkout
+    ├── moo-recaptcha/              ← Moospace reCAPTCHA
+    └── moospace_wc/                ← moospace WooCommerce
+```
+
+`.gitignore` 設定只追蹤上述目錄，WordPress 核心、第三方外掛等不納入版控。
+
+### 修改檔案後提交變更
+
+```bash
+cd /home/mooga/webapps/zenith/wp-content
+git add -A
+git commit -m "描述這次改了什麼"
+git push
+```
+
+### 還原到上一個版本
+
+```bash
+# 查看歷史
+git log --oneline
+
+# 還原特定檔案到上一版
+git checkout HEAD~1 -- themes/generatepress_child/functions.php
+
+# 還原整個目錄到某個 commit
+git checkout <commit-hash>
+```
+
+### 其他獨立 Public Repo
+
+| 外掛 | Repo |
+|------|------|
+| Moospace Open Price Checkout | `enyilio/moospace-open-price-checkout` |
+| Moospace reCAPTCHA | `enyilio/moospace-recaptcha` |
+
+這兩個 public repo 供外部發布用，日常開發以 zenith monorepo 為主。
