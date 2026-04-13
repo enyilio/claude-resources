@@ -94,58 +94,92 @@ source ~/.bashrc
 
 ---
 
+
+---
+
 ## 三、版本控制（Git）
 
 ### 目的
 
-每次修改主機上的客製化程式碼後，透過 git 保存變更紀錄，確保任何修改都可追蹤與還原。
+每次修改 WordPress 網站的客製化程式碼後，透過 git 保存變更紀錄，確保任何修改都可追蹤與還原，避免誤改難以復原。
 
-### zenith 網站 Monorepo
+### 追蹤哪些檔案
 
-所有 zenith 網站的客製化程式碼集中在單一私人 repo 管理：
-**Repo：** `enyilio/zenith`（private）
+WordPress 核心、第三方外掛、佈景主題不需要納入版控（它們有自己的更新機制）。
+只追蹤**自己開發或客製化的程式碼**：
 
-**追蹤範圍（`/home/mooga/webapps/zenith/wp-content/`）：**
+- 子主題目錄（`functions.php`、`style.css`、自訂模板等）
+- 自行開發的外掛
+
+### Monorepo 結構建議
+
+將同一個網站的客製化程式碼集中在單一 repo 管理，用資料夾區分類型：
 
 ```
-wp-content/
+repo-root/
 ├── themes/
-│   └── generatepress_child/        ← 子主題（functions.php、style.css、WooCommerce 模板）
+│   └── my-child-theme/
 └── plugins/
-    ├── zenith-custom-checkout/     ← Moospace Open Price Checkout
-    ├── moo-recaptcha/              ← Moospace reCAPTCHA
-    └── moospace_wc/                ← moospace WooCommerce
+    ├── my-plugin-a/
+    └── my-plugin-b/
 ```
 
-`.gitignore` 設定只追蹤上述目錄，WordPress 核心、第三方外掛等不納入版控。
+### 設定 .gitignore（只追蹤指定目錄）
 
-### 修改檔案後提交變更
+在 `wp-content/` 初始化 git repo，用 `.gitignore` 限制追蹤範圍：
+
+```gitignore
+# 忽略所有
+*
+!.gitignore
+
+# 開放子主題
+!themes/
+themes/*
+!themes/my-child-theme/
+!themes/my-child-theme/**
+
+# 開放自製外掛
+!plugins/
+plugins/*
+!plugins/my-plugin-a/
+!plugins/my-plugin-a/**
+```
+
+### 初始化與推送
 
 ```bash
-cd /home/mooga/webapps/zenith/wp-content
+cd /path/to/wp-content
+git init
+git branch -m main
+git remote add origin https://github.com/your-account/your-repo.git
+git add -A
+git commit -m "initial commit"
+git push -u origin main
+```
+
+### 修改檔案後提交
+
+```bash
 git add -A
 git commit -m "描述這次改了什麼"
 git push
 ```
 
-### 還原到上一個版本
+### 還原檔案
 
 ```bash
 # 查看歷史
 git log --oneline
 
 # 還原特定檔案到上一版
-git checkout HEAD~1 -- themes/generatepress_child/functions.php
+git checkout HEAD~1 -- themes/my-child-theme/functions.php
 
-# 還原整個目錄到某個 commit
-git checkout <commit-hash>
+# 查看某個 commit 的變更內容
+git show <commit-hash>
 ```
 
-### 其他獨立 Public Repo
-
-| 外掛 | Repo |
-|------|------|
-| Moospace Open Price Checkout | `enyilio/moospace-open-price-checkout` |
-| Moospace reCAPTCHA | `enyilio/moospace-recaptcha` |
-
-這兩個 public repo 供外部發布用，日常開發以 zenith monorepo 為主。
+### 注意事項
+- 私人 repo 不要放入任何帳號密碼、API Key、資料庫連線資訊
+- `.gitignore` 設定前先確認 `git status` 追蹤的檔案是否符合預期
+- 建議每次完成一個功能或修復就 commit 一次，不要累積太多再一起 commit
